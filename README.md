@@ -1,23 +1,22 @@
 # FreeChat
 腾讯移动终端开发课程项目-服务器端
 
-  http server
+## http server
   
-1.处理用户的注册和登录事件
-
-2.使用md5加密用户密码
-
-3.使用mysql存储用户信息
-
+1.处理用户的注册和登录事件  
+2.使用md5加密用户密码  
+3.使用mysql存储用户信息  
   
-  
-  
-  tcp server
+## tcp server
     
-1.使用python的select模块处理socket消息
+1.使用python的select模块处理socket消息  
+2.用户上传自己的name，服务器返回所有在线用户name  
+3.维护name:socket字典来转发消息  
 
-2.用户上传自己的name，服务器返回所有在线用户name
-
-3.维护name:socket字典来转发消息
-
+### To-do list
+目前文本消息传输是用json格式，没有考虑被拆包的情况，另外图片和语言传输也还没实现。
+待实现的较为可靠方案如下：  
+1.文本消息：数据类型(Tag) + JSON长度 + JSON (兼容目前定义的传输格式)  
+2.图片语言消息：数据类型(Tag) + 图片/语音byte长度 + fromName + toName + 图片/语音byte
+ 
 
