@@ -4,6 +4,7 @@ import socket
 import select
 import json
 import struct
+import traceback
 
 HOST = '' 
 SOCKET_LIST = [] # socket
@@ -45,7 +46,7 @@ def chat_server():
                     package = sock.recv(RECV_BUFFER)
                     if package:
                         # there is something in the socket
-                        print package
+                        #print package
                         # There is a incomplete package in the sock 
                         if sock in MESSAGE_DICT:
                             # this package length >= the rest length
@@ -62,6 +63,7 @@ def chat_server():
                             print unpacked_data
                             tag = unpacked_data[0]
                             length = unpacked_data[1]
+                            print 'length:', length
                             if tag == 'a':
                                 if length + tag_unpacker.size > RECV_BUFFER:
                                     LENGTH_DICT[sock] = length - RECV_BUFFER + tag_unpacker.size
@@ -74,20 +76,21 @@ def chat_server():
                                     MESSAGE_DICT[sock] = package
                                 else:
                                     handle_complete_package(sock, package)
-                except:
-                    print 'Receive package exception.'
+                except Exception, e:
+                    traceback.print_exc()
                     continue
     server_socket.close()
 
 def handle_complete_package(sock, package):
     message_tag = tag_unpacker.unpack(package[0:tag_unpacker.size])
+    print 'complete:', message_tag[0], message_tag[1]
     # handle text message
     if message_tag[0] == 'a':
         try:
             decoded = json.loads(package[tag_unpacker.size:])
             tag = decoded[0]
-        except:
-            print 'Error format'
+        except Exception, e:
+            traceback.print_exc()
         # upload name and return online names
         if tag == 'upload_name':
             SOCKET_DICT[decoded[1]] = sock
@@ -118,18 +121,21 @@ def handle_complete_package(sock, package):
         to_name = name_unpacker.unpack(package[l1 + l2 : l1 + 2 * l2])
         pos = to_name[0].find('\x00')
         to_name = to_name[0][:pos]
+        print 'send medio to:', to_name
         forward_message = package[: l1 + l2] + package[l1 + 2 * l2:] 
         forward_sock = SOCKET_DICT[to_name]
         forward_sock.send(forward_message)
 
 # forward chat text messages to specified client
 def forward(sock, message):
+    print 'forward', message
     packed_tag = tag_unpacker.pack('a', len(message))
     sock.send(packed_tag + message)
     
                
 # broadcast message to all connected clients
 def broadcast(server_socket, message):
+    print 'broadcast', message
     for sock in SOCKET_LIST:
         if sock != server_socket:
             try:
